@@ -1,7 +1,11 @@
 from pathlib import Path
 import numpy as np
 import mujoco
-from stable_baselines3.common.callbacks import BaseCallback
+
+try:
+    from stable_baselines3.common.callbacks import BaseCallback
+except Exception:
+    BaseCallback = object
 
 
 def quat_mul(q1, q2):

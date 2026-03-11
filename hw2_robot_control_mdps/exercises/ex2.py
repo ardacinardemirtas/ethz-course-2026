@@ -19,7 +19,10 @@ def generate_quintic_spline_waypoints(start, end, num_points):
     Returns:
         np.ndarray: Generated waypoints.
     """
-    raise NotImplementedError()
+    s = np.linspace(0, 1, num_points)
+    f_s = 10 * s**3 - 15 * s**4 + 6 * s**5 # ensures 0 velocity and acceleration at the start and end of the trajectory, important for smooth motion.
+    waypoints = start + (end - start) * f_s[:, np.newaxis] # we need to add a new axis to f_s to make it broadcastable with start and end, which are 2D arrays of shape (num_points, num_dimensions).
+    return waypoints
 
 
 def pid_control(tracking_error_history, timestep, Kp=150.0, Ki=0.0, Kd=0.01):
@@ -44,5 +47,9 @@ def pid_control(tracking_error_history, timestep, Kp=150.0, Ki=0.0, Kd=0.01):
     Returns:
         np.ndarray: Control signal.
     """
-    raise NotImplementedError()
-            
+    P = tracking_error_history[-1] # the most recent error
+    I = np.sum(tracking_error_history) * timestep
+    D = (tracking_error_history[-1] - tracking_error_history[-2]) / timestep if len(tracking_error_history) > 1 else 0.0 # finite difference approximation of the derivative
+    control = Kp * P + Ki * I + Kd * D
+    print(t)
+    return control

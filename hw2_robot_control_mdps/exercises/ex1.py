@@ -18,7 +18,9 @@ def get_lemniscate_keypoint(t, a=0.2):
         y (float or np.ndarray): y coordinates of the keypoint on the lemniscate.
         z (float or np.ndarray): z coordinates of the keypoint on the lemniscate.
     """
-    raise NotImplementedError()
+    y = a * np.cos(t) / (1 + np.sin(t)**2)
+    z = a * np.cos(t) * np.sin(t) / (1 + np.sin(t)**2)
+    return y, z
 
 def build_keypoints(count=16, width=0.25, x_offset=0.3, z_offset=0.25):
     """TODO:
@@ -38,7 +40,10 @@ def build_keypoints(count=16, width=0.25, x_offset=0.3, z_offset=0.25):
     Returns:
         np.ndarray: Array of shape (count, 3) containing the generated keypoints.
     """
-    raise NotImplementedError()
+    t = np.linspace(0, 2 * np.pi, count, endpoint=False)
+    y, z = get_lemniscate_keypoint(t, a=width)
+    keypoints = np.stack([x_offset * np.ones_like(y), y, z + z_offset], axis=-1)
+    return keypoints
 
 def ik_track(model, data, site_name, target_pos,
              damping=1e-3, pos_gain=2.0, dt=0.1, max_iters=2000):
@@ -72,20 +77,21 @@ def ik_track(model, data, site_name, target_pos,
     Returns:
         np.ndarray: Target joint configuration (qpos) that achieves the desired end-effector position.
     """
-    num_joints = model.nv
+    num_joints = model.nv # number of degrees of freedom in the robot (as a variable of the static model of the scene)
     # Store the original joint configuration to restore later
-    original_qpos = data.qpos.copy()
+    original_qpos = data.qpos.copy() # qpos is the current joint configuration of the robot, which is a vector of length num_joints. It is a variable of the data object, which is the dynamic state that changes at each step.
 
     for i in range(max_iters):
         # use forward kinematics to update current end-effector position: data.site(site_name).xpos
-        mujoco.mj_kinematics(model, data)
-        mujoco.mj_comPos(model, data)
+        mujoco.mj_kinematics(model, data) # runs forward kinematics to compute the positions and orientations of all sites based on the current joint configuration (qpos) and velocities (qvel). It updates the data object with the new positions and orientations of the sites, which can be accessed using data.site(site_name).xpos for position and data.site(site_name).xmat for orientation.
+        mujoco.mj_comPos(model, data) # computes the center of mass position of the robot based on the current joint configuration and updates data.comPos with the new center of mass position. This is important for accurate forward kinematics and dynamics calculations, as the center of mass affects the robot's balance and movement.
 
         # TODO: compute end-effector position error
-        err_pos = ...
+        err_pos = target_pos - data.site(site_name).xpos
 
         # TODO: check if the 2-norm of the position error is within a small threshold (1e-3), if yes, break the loop
-        ...
+        if np.linalg.norm(err_pos) < 1e-3:
+            break
         
         # Get the Jacobian of the end-effector using mj_jacSite.
         jacp = np.zeros((3, num_joints)) # position Jacobian
@@ -99,7 +105,7 @@ def ik_track(model, data, site_name, target_pos,
         # [pos_gain * err_pos, rot_gain * err_rot]. Since we are ignoring orientation tracking, you can set the rotational part of the weighted error to zero.
         # Instead of directly computing the matrix inverse (which can be numerically unstable), you should use np.linalg.solve to solve the 
         # linear system (J @ J^T + damping * I) x = weighted_err for x, and then compute qdot = J^T @ x. This is more stable and efficient than computing the inverse.
-        qdot = ...
+        qdot = J.T @ np.linalg.solve(J @ J.T + damping * np.eye(6), np.hstack([pos_gain * err_pos, np.zeros(3)]))
 
         # optional clamp to avoid overshoot
         qdot = np.clip(qdot, -2.0, 2.0)

@@ -36,9 +36,13 @@ Note that the tracking is done by purely teleporting the joint positions to the 
 
 ### Theoretical questions
 1. If you increase the width of the Lemniscate (increasing a), what issue can happen with the robot performing IK?
+The lemniscate can go beyond the robot's workspace.
 2. What can happen if you change the dt parameter in IK?
+The LM algorithm can overshoot and oscillate or converge too slowly.
 3. We implemented a simple numerical IK solver. What are the advantages and disadvantages compared to an analytical IK solver?
+Advantages are that it is computationally practical, disadvantages are that its imprecise and slow.
 4. What are the limits of our IK solver compared to state-of-the-art IK solvers?
+Low obstacle awareness, and high computational cost.
 
 The theoretical questions require only short and direct answers. Each question is expected to have a 1-sentence answer.
 
@@ -128,8 +132,11 @@ A viewer window should pop up showing the robot smoothly moving between several 
 To get a feeling for the choice of the PID gains, you will analyze how their choice influences the behavior of the waypoint tracking. 
 Test different settings of the gains to be able to answer the following:
 1. If you keep increasing $K_P$, what issue arises when tracking the waypoints?
+This would result in overshooting and oscillating around the trajectory.
 2. How does $K_D$ mitigate the effect you saw above when increasing $K_P$?
+It corrects for a change in error which happens when you overshoot or oscillate, it effectively mitigates those.
 3. In what scenarios is a non-zero $K_I$ needed for the controller to perform well?
+If there is a tracking error that has accumulated over time, KP and KD cannot account for those and a KI is needed to account for that.
 
 There is no need to show these behavior changes in the video and you can just write down your answers in the video. Or say them out loud.
 The theoretical questions require only short and direct answers. Each question is expected to have a 1-sentence answer.
