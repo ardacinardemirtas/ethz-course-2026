@@ -1,0 +1,29 @@
+{
+  "attributes": {
+    "action_space": "ee",
+    "action_dim": 3,
+    "action_spec": "ee_pos_xyz(3)",
+    "state_spec": "ee_pos_xyz(3)",
+    "state_key": "state_ee_xyz",
+    "action_key": "action_ee_xyz",
+    "num_episodes": 52,
+    "num_dagger_episodes": 15,
+    "num_transitions": 18005,
+    "source_zarrs": [
+      "datasets\\raw\\single_cube\\dagger\\2026-03-23_15-57-12\\so100_transfer_cube_teleop.zarr",
+      "datasets\\raw\\single_cube\\dagger\\2026-03-24_11-23-53\\so100_transfer_cube_teleop.zarr",
+      "datasets\\raw\\single_cube\\dagger\\2026-03-24_11-32-30\\so100_transfer_cube_teleop.zarr",
+      "datasets\\raw\\single_cube\\dagger\\2026-03-24_11-47-52\\so100_transfer_cube_teleop.zarr",
+      "datasets\\raw\\single_cube\\teleop\\2026-03-22_14-55-20\\so100_transfer_cube_teleop.zarr",
+      "datasets\\raw\\single_cube\\teleop\\2026-03-22_14-59-28\\so100_transfer_cube_teleop.zarr",
+      "datasets\\raw\\single_cube\\teleop\\2026-03-22_15-04-12\\so100_transfer_cube_teleop.zarr",
+      "datasets\\raw\\single_cube\\teleop\\2026-03-22_15-16-23\\so100_transfer_cube_teleop.zarr",
+      "datasets\\raw\\single_cube\\teleop\\2026-03-22_15-51-14\\so100_transfer_cube_teleop.zarr",
+      "datasets\\raw\\single_cube\\teleop\\2026-03-23_14-20-11\\so100_transfer_cube_teleop.zarr",
+      "datasets\\raw\\single_cube\\teleop\\2026-03-23_14-23-49\\so100_transfer_cube_teleop.zarr",
+      "datasets\\raw\\single_cube\\teleop\\2026-03-23_14-37-14\\so100_transfer_cube_teleop.zarr"
+    ]
+  },
+  "zarr_format": 3,
+  "node_type": "group"
+}
