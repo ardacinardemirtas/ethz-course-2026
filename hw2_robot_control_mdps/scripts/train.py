@@ -1,3 +1,6 @@
+import os
+os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
+
 import argparse
 from stable_baselines3 import PPO
 from stable_baselines3.common.vec_env import SubprocVecEnv, VecMonitor
@@ -17,6 +20,10 @@ def parse_args():
                         help="Checkpoint every N update iterations")
     parser.add_argument("--device", type=str, default="cpu",
                         help="Torch device (cpu or cuda)")
+    parser.add_argument("--resume", type=str, default=None,
+                        help="Path to checkpoint zip to resume from (e.g. logs/.../model_300.zip)")
+    parser.add_argument("--resume_iter", type=int, default=0,
+                        help="Iteration the checkpoint was saved at (e.g. 300)")
     return parser.parse_args()
 
 def make_env():
@@ -59,24 +66,31 @@ if __name__ == "__main__":
             vf_coef=1.0
         )
 
+    if args.resume:
+        print(f"Resuming from checkpoint: {args.resume}")
+        model = PPO.load(args.resume, env=model.get_env(), device=args.device)
+
     update_checkpoint_callback = UpdateCheckpointCallback(
         save_path=None,
         name_prefix="model",
         save_freq_updates=args.save_checkpt_freq,
         verbose=0,
     )
+    if args.resume:
+        update_checkpoint_callback.update_counter = args.resume_iter
 
     # Train for a target number of PPO update steps (each update = n_steps * n_envs transitions)
-    total_update_steps = args.max_iterations
+    remaining_iterations = args.max_iterations - args.resume_iter
     rollout_batch_size = model.n_steps * model.n_envs
-    total_timesteps = total_update_steps * rollout_batch_size
-    print(f"Training for {total_update_steps} iterations (~{total_timesteps} steps, rollout size {rollout_batch_size})")
+    total_timesteps = remaining_iterations * rollout_batch_size
+    print(f"Training for {remaining_iterations} iterations (~{total_timesteps} steps, rollout size {rollout_batch_size})")
 
     envs_ref = model.get_env()
     try:
         model.learn(total_timesteps=total_timesteps,
                     log_interval=1,
                     tb_log_name=EXP_NAME,
+                    reset_num_timesteps=not bool(args.resume),
                     callback=[EpisodeLoggingCallback(),
                               update_checkpoint_callback,
                               KLAdaptiveLRCallback(target_kl=0.05, init_lr=1e-3, min_lr=1e-5, max_lr=1e-3)]
@@ -92,5 +106,5 @@ if __name__ == "__main__":
         raise ValueError("Logger directory is not set; cannot save final model")
     final_update_step = update_checkpoint_callback.update_counter
     final_model_path = Path(log_dir) / f"model_{final_update_step}"
-    model.save(str(final_model_path))
+    model.save(str(final_model_path), include=["policy.optimizer"])
     print(f"Saved models to {log_dir}")

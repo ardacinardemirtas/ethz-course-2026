@@ -1,9 +1,12 @@
+import os
+os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
+
 import argparse
 import time
+from stable_baselines3 import PPO
 import mujoco
 import mujoco.viewer
 import numpy as np
-from stable_baselines3 import PPO
 
 from __init__ import *
 from env.so100_tracking_env import SO100TrackEnv

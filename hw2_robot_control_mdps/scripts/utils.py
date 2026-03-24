@@ -87,7 +87,7 @@ class UpdateCheckpointCallback(BaseCallback):
         if self.update_counter % self.save_freq_updates == 0:
             filename = f"{self.name_prefix}_{self.update_counter}"
             full_path = self.save_path / filename
-            self.model.save(str(full_path))
+            self.model.save(str(full_path), include=["policy.optimizer"])
             if self.verbose > 0:
                 print(f"Saved checkpoint at {full_path}")
         return True

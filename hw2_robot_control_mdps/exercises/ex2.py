@@ -51,5 +51,4 @@ def pid_control(tracking_error_history, timestep, Kp=150.0, Ki=0.0, Kd=0.01):
     I = np.sum(tracking_error_history) * timestep
     D = (tracking_error_history[-1] - tracking_error_history[-2]) / timestep if len(tracking_error_history) > 1 else 0.0 # finite difference approximation of the derivative
     control = Kp * P + Ki * I + Kd * D
-    print(t)
     return control

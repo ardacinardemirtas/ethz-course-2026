@@ -116,6 +116,8 @@ def load_checkpoint(
 
     d_model = int(ckpt.get("d_model", 128))
     depth = int(ckpt.get("depth", 2))
+    dropout = float(ckpt.get("dropout", 0.0))
+    use_layer_norm = bool(ckpt.get("use_layer_norm", False))  # False for checkpoints trained before LayerNorm was added
     policy_type = str(ckpt.get("policy_type", "obstacle"))
     model = build_policy(
         policy_type,
@@ -124,6 +126,8 @@ def load_checkpoint(
         chunk_size=chunk_size,
         d_model=d_model,
         depth=depth,
+        dropout=dropout,
+        use_layer_norm=use_layer_norm,
     )
     model.load_state_dict(ckpt["model_state_dict"])
     model.to(device)
