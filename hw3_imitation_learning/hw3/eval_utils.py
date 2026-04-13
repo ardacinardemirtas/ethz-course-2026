@@ -118,6 +118,8 @@ def load_checkpoint(
     depth = int(ckpt.get("depth", 2))
     dropout = float(ckpt.get("dropout", 0.0))
     use_layer_norm = bool(ckpt.get("use_layer_norm", False))  # False for checkpoints trained before LayerNorm was added
+    use_full_state = bool(ckpt.get("use_full_state", False))
+    use_relative_state = bool(ckpt.get("use_relative_state", False))
     policy_type = str(ckpt.get("policy_type", "obstacle"))
     model = build_policy(
         policy_type,
@@ -128,6 +130,8 @@ def load_checkpoint(
         depth=depth,
         dropout=dropout,
         use_layer_norm=use_layer_norm,
+        use_full_state=use_full_state,
+        use_relative_state=use_relative_state,
     )
     model.load_state_dict(ckpt["model_state_dict"])
     model.to(device)

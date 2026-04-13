@@ -161,6 +161,8 @@ def main() -> None:
     parser.add_argument("--d-model", type=int, default=512, help="Hidden layer width (default: 512).")
     parser.add_argument("--depth", type=int, default=4, help="Number of hidden layers (default: 4).")
     parser.add_argument("--dropout", type=float, default=0.1, help="Dropout probability (default: 0.1).")
+    parser.add_argument("--full-state", action="store_true", help="Pass full state to MultiTaskPolicy instead of the reduced 6-dim target-centric input.")
+    parser.add_argument("--relative-state", action="store_true", help="Use relative state representation for MultiTaskPolicy: (ee-bin)(3), (ee-cube)(3), gripper(1).")
     parser.add_argument(
         "--extra-zarr",
         nargs="+",
@@ -224,6 +226,8 @@ def main() -> None:
         d_model=args.d_model,
         depth=args.depth,
         dropout=args.dropout,
+        use_full_state=args.full_state,
+        use_relative_state=args.relative_state,
     ).to(device)
 
     n_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
@@ -233,7 +237,7 @@ def main() -> None:
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, patience=8, factor=0.5)
 
     # optimizer = torch.optim.AdamW(model.parameters(), lr=LR, weight_decay=1e-4)
-    # scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=100, eta_min=1e-6)
+    # scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=EPOCHS, eta_min=LR * 0.1)
 
     # ── training loop ─────────────────────────────────────────────────
     best_val = float("inf")
@@ -293,6 +297,8 @@ def main() -> None:
                     "depth": args.depth,
                     "dropout": args.dropout,
                     "use_layer_norm": True,
+                    "use_full_state": args.full_state,
+                    "use_relative_state": args.relative_state,
                 },
                 save_path,
             )
