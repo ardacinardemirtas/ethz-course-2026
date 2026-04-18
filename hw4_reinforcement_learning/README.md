@@ -134,10 +134,19 @@ In this environment, actions may not always be executed as intended due to slipp
 
 ### Theoretical Questions
 1. What is the difference between policy iteration and value iteration in terms of their update procedures?
+Computationally, policy iteration computes V(s) assuming we are following a certain policy (which we update separately), requiring a full convergence loop. Value iteration directly computes V(s) as the maximum extractable value from each state by an argmax (one sweep), and computes a greedy policy from that. Both converge to the same optimal policies though.
 2. What happens if the discount factor `gamma` is close to 0 or 1?
+If gamma is close to zero essentially the policy will be very short-sighted in the sense that it will value only immediate rewards. if it's close to one on the other hand, future rewards will affect computations as much as immediate rewards, makin the policy more long-sighted.
 3. How does increasing the slip probability (`slip_chance`) affect the optimal policy? 
    - Compare the cases `slip_chance = 0.0`, `0.01`, and `0.2`.
    - Why does the agent tend to behave more conservatively as stochasticity increases?
+
+   It makes the agent move away from the cliff (taking a longer route) more progressively as increasing slip chance makes the agent fall to the cliff once in a while if it stays close to it.
+   - In slip chance = 0, the agent is inclined to take the shortest path possible, moving close to the cliff.
+   - In slip chance = 0.01 values for states close to the cliff get lower and the agent is somewhat motivated to move away
+   - In slip chance = 0.2 values for states close to the cliff get even lower now and agent is much more inclined to move away from the cliff.
+
+   The agent behaves more conservatively as stochasticity increases precisely because the risk of falling from the cliff increases, which translates to lower state-values for states along the cliff (due to -100 reward) and an optimal policy that moves away from these states.
 
 ### Deliverables
 1. **Code:** Your code with filled in TODOs in `exercises/ex1_mdp.py`.
@@ -257,8 +266,11 @@ Note: The options `--play` and `--record_video` cannot be used at the same time,
 
 ### Theoretical Questions
 1. Why is experience replay important in DQN?
+To break temporal correlation (which breaks iid assumption of SGD) across training samples, sampling from different parts of different episodes is needed. Also it provides data efficiency.
 2. What is the role of the target network in DQN? How does it improve stability?
+It provides a "fixed target" for the DQN network to approximate, otherwise the network would be chasing a moving target, since every gradient update would change the target.
 3. What is Double DQN, and how does it reduce overestimation bias compared to standard DQN? (See: [Deep Reinforcement Learning with Double Q-learning](https://arxiv.org/abs/1509.06461))
+It changes which network selects the best looking action (online) and which which network evaluates how good that action actually is (target). In DQN both evaluation and selection are done by the online network which causes overestimation. 
 
 ### Deliverables
 1. **Code:** Your implementation with completed TODOs in `exercises/ex2_dqn.py` and `exercises/ex2_dqn_config.py`.
@@ -352,7 +364,7 @@ tensorboard --logdir="your tensorboard event file path"
 ```
 
 ### Evaluation
-
+1
 To evaluate your trained model:
 
 ```bash
@@ -392,8 +404,11 @@ Max tracking error   : 0.064921
 
 ### Theoretical Questions
 1. Why does PPO clip the probability ratio instead of directly constraining the KL divergence like TRPO? What goes wrong if you remove clipping entirely?
+TRPO enforces the KL constraint directly but requires expensive second-order optimization. PPO clips the ratio as a cheaper proxy. Without clipping, nothing stops the policy from taking huge destructive steps.
 2. PPO throws away all collected data after each update. Why can't you simply reuse old rollouts for more gradient steps?
+PPO is on-policy so advantage estimates assume data was collected under the current policy. After an update the policy has changed, making reuse biased.
 3. What does the GAE parameter \(\lambda\) control? What happens at the extremes \(\lambda = 0\) and \(\lambda = 1\)?
+λ controls the bias-variance tradeoff in the advantage estimate. At λ=0 it's just the TD error (low variance, high bias), at λ=1 it's the full Monte Carlo return (unbiased, high variance).
 
 ### Deliverables
 1. **Code:** Your implementation with completed TODOs in `exercises/ex3_ppo_student.py`.
@@ -476,10 +491,15 @@ Same as in ex3, evaluation summary is printed on terminal screen.
 
 ### Theoretical Questions
 1. SAC adds an entropy bonus to the reward. What are the benefits of this?
+It encourages exploration and prevents the policy from collapsing to a suboptimal deterministic solution too early.
 2. SAC squashes actions through tanh. Why does this require a log-probability correction?
+tanh is nonlinear so the Gaussian log-prob of the pre-squashed sample doesn't match the log-prob of the output. You need to subtract the log-Jacobian to correct for it.
 3. The temperature \(\alpha\) is tuned automatically. What happens when the policy's entropy is above vs. below the target?
+If entropy is above target α decreases to make the policy more focused, if it's below α increases to push toward more exploration.
 4. How does SAC compare with PPO in terms of update-to-data (UTD) ratio? (UTD = gradient update steps / environment steps)
+SAC has a much higher UTD ratio since it's off-policy and replays transitions many times from the buffer, whereas PPO discards rollouts after each update.
 5. Briefly discuss about the advantages and disadvantages of on-policy vs. off-policy algorithms.
+On-policy algorithms like PPO are simpler and more stable but sample-inefficient. Off-policy ones like SAC are much more sample-efficient by reusing old data, but more complex and potentially less stable.
 
 
 ### Deliverables
